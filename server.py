@@ -1,5 +1,6 @@
 import tornado.ioloop
 import tornado.web
+import graphitesend
 
 MINUTE = 60
 
@@ -21,11 +22,19 @@ class MainHandler(tornado.web.RequestHandler):
         uid = self.get_argument('uid')
         print(uid)
 
+	g = graphitesend.init(
+		graphite_server='localhost',
+		prefix='mr_tea',
+		system_name=''
+	)
+
         if uid == 'rebrew':
             uid = self._last_brew
+	    g.send('rebrew', 1)
 
         if uid in self._res:
             self.__class__._last_brew = uid
+            g.send(self._res[uid].split(',')[0], 1)
             self.write(self._res[uid])
         else:
             self.write('unknown')
